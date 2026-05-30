@@ -2,10 +2,12 @@
 train.py - Training script for HW4 Image Restoration (Rain & Snow) using PromptIR.
 
 Outputs saved to ``--ckpt_dir``:
-    - promptir_epoch<N>.pth        Model checkpoints.
-    - loss_curve.png               Train / val L1-loss per epoch.
-    - psnr_per_type.png            Per-degradation-type PSNR bar chart (final epoch).
-    - training_history.csv         Numeric log of every epoch.
+    - last.pth
+    - best_loss.pth
+    - best_psnr.pth
+    - loss_curve.png
+    - psnr_per_type.png
+    - training_history.csv
 
 Usage:
     python train.py
