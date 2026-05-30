@@ -1,0 +1,36 @@
+# Ignore everything by default
+*
+
+# Allow Git to enter folders
+!*/
+
+# Keep this gitignore
+!.gitignore
+
+# Only track Python and Markdown files
+!*.py
+!*.md
+!**/*.py
+!**/*.md
+
+# Always ignore Python cache files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Always ignore generated / large / local files
+checkpoints/
+results/
+hw4_realse_dataset/
+
+*.pth
+*.pt
+*.ckpt
+*.npz
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.csv
