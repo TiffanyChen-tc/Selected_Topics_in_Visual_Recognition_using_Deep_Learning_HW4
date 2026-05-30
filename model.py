@@ -214,13 +214,19 @@ class OverlapPatchEmbed(nn.Module):
 # ---------------------------------------------------------------------------
 
 class PromptGenBlock(nn.Module):
-    def __init__(self, prompt_dim=128, prompt_len=8, prompt_size=96, lin_dim=192):
+    def __init__(
+        self, prompt_dim=128, prompt_len=8, prompt_size=96,
+        lin_dim=192
+    ):
         super().__init__()
         self.prompt_param = nn.Parameter(
             torch.rand(1, prompt_len, prompt_dim, prompt_size, prompt_size)
         )
         self.linear_layer = nn.Linear(lin_dim, prompt_len)
-        self.conv3x3 = nn.Conv2d(prompt_dim, prompt_dim, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv3x3 = nn.Conv2d(
+            prompt_dim, prompt_dim,
+            kernel_size=3, stride=1, padding=1, bias=False
+        )
 
     def forward(self, x):
         B, C, H, W = x.shape
@@ -267,9 +273,15 @@ class PromptIR(nn.Module):
         if self.decoder:
             # prompt_len: 5 → 8 for richer degradation representation
             # (more basis vectors let the model distinguish rain density/angle/snow patterns)
-            self.prompt1 = PromptGenBlock(prompt_dim=64,  prompt_len=8, prompt_size=64,  lin_dim=96)
-            self.prompt2 = PromptGenBlock(prompt_dim=128, prompt_len=8, prompt_size=32,  lin_dim=192)
-            self.prompt3 = PromptGenBlock(prompt_dim=320, prompt_len=8, prompt_size=16,  lin_dim=384)
+            self.prompt1 = PromptGenBlock(
+                prompt_dim=64, prompt_len=8, prompt_size=64, lin_dim=96
+            )
+            self.prompt2 = PromptGenBlock(
+                prompt_dim=128, prompt_len=8, prompt_size=32, lin_dim=192
+            )
+            self.prompt3 = PromptGenBlock(
+                prompt_dim=320, prompt_len=8, prompt_size=16, lin_dim=384
+            )
 
             # prompt0: full-resolution prompt interaction before refinement.
             # Rain streaks are high-frequency full-res structures; injecting a
@@ -280,8 +292,8 @@ class PromptIR(nn.Module):
                 prompt_dim=96, prompt_len=5, prompt_size=64, lin_dim=int(dim * 2**1)
             )
             self.noise_level0 = TransformerBlock(
-                dim=int(dim * 2**2),          # 96 + 96 = 192 = 4*dim
-                num_heads=heads[2],           # 4 heads (48 channels per head, matches dim=192 elsewhere)
+                dim=int(dim * 2**2),
+                num_heads=heads[2],
                 ffn_expansion_factor=ffn_expansion_factor,
                 bias=bias,
                 LayerNorm_type=LayerNorm_type,
@@ -295,7 +307,9 @@ class PromptIR(nn.Module):
         self.chnl_reduce3 = nn.Conv2d(320, 256, kernel_size=1, bias=bias)
 
         # Encoder Level 1
-        self.reduce_noise_channel_1 = nn.Conv2d(dim + 64, dim, kernel_size=1, bias=bias)
+        self.reduce_noise_channel_1 = nn.Conv2d(
+            dim + 64, dim, kernel_size=1, bias=bias
+        )
         self.encoder_level1 = nn.Sequential(*[
             TransformerBlock(dim=dim, num_heads=heads[0],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -305,7 +319,10 @@ class PromptIR(nn.Module):
         self.down1_2 = Downsample(dim)
 
         # Encoder Level 2
-        self.reduce_noise_channel_2 = nn.Conv2d(int(dim * 2**1) + 128, int(dim * 2**1), kernel_size=1, bias=bias)
+        self.reduce_noise_channel_2 = nn.Conv2d(
+            int(dim * 2**1) + 128, int(dim * 2**1),
+            kernel_size=1, bias=bias
+        )
         self.encoder_level2 = nn.Sequential(*[
             TransformerBlock(dim=int(dim * 2**1), num_heads=heads[1],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -315,7 +332,10 @@ class PromptIR(nn.Module):
         self.down2_3 = Downsample(int(dim * 2**1))
 
         # Encoder Level 3
-        self.reduce_noise_channel_3 = nn.Conv2d(int(dim * 2**2) + 256, int(dim * 2**2), kernel_size=1, bias=bias)
+        self.reduce_noise_channel_3 = nn.Conv2d(
+            int(dim * 2**2) + 256, int(dim * 2**2),
+            kernel_size=1, bias=bias
+        )
         self.encoder_level3 = nn.Sequential(*[
             TransformerBlock(dim=int(dim * 2**2), num_heads=heads[2],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -334,13 +354,19 @@ class PromptIR(nn.Module):
 
         # Decoder Level 3
         self.up4_3 = Upsample(int(dim * 2**2))
-        self.reduce_chan_level3 = nn.Conv2d(int(dim * 2**1) + 192, int(dim * 2**2), kernel_size=1, bias=bias)
+        self.reduce_chan_level3 = nn.Conv2d(
+            int(dim * 2**1) + 192, int(dim * 2**2),
+            kernel_size=1, bias=bias
+        )
         self.noise_level3 = TransformerBlock(
             dim=int(dim * 2**2) + 512, num_heads=heads[2],
             ffn_expansion_factor=ffn_expansion_factor,
             bias=bias, LayerNorm_type=LayerNorm_type,
         )
-        self.reduce_noise_level3 = nn.Conv2d(int(dim * 2**2) + 512, int(dim * 2**2), kernel_size=1, bias=bias)
+        self.reduce_noise_level3 = nn.Conv2d(
+            int(dim * 2**2) + 512, int(dim * 2**2),
+            kernel_size=1, bias=bias
+        )
         self.decoder_level3 = nn.Sequential(*[
             TransformerBlock(dim=int(dim * 2**2), num_heads=heads[2],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -350,13 +376,20 @@ class PromptIR(nn.Module):
 
         # Decoder Level 2
         self.up3_2 = Upsample(int(dim * 2**2))
-        self.reduce_chan_level2 = nn.Conv2d(int(dim * 2**2), int(dim * 2**1), kernel_size=1, bias=bias)
+        self.reduce_chan_level2 = nn.Conv2d(
+            int(dim * 2**2), int(dim * 2**1),
+            kernel_size=1, bias=bias
+        )
         self.noise_level2 = TransformerBlock(
-            dim=int(dim * 2**1) + 224, num_heads=heads[2],
+            dim=int(dim * 2**1) + 224,
+            num_heads=heads[2],
             ffn_expansion_factor=ffn_expansion_factor,
             bias=bias, LayerNorm_type=LayerNorm_type,
         )
-        self.reduce_noise_level2 = nn.Conv2d(int(dim * 2**1) + 224, int(dim * 2**2), kernel_size=1, bias=bias)
+        self.reduce_noise_level2 = nn.Conv2d(
+            int(dim * 2**1) + 224, int(dim * 2**2),
+            kernel_size=1, bias=bias
+        )
         self.decoder_level2 = nn.Sequential(*[
             TransformerBlock(dim=int(dim * 2**1), num_heads=heads[1],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -367,11 +400,15 @@ class PromptIR(nn.Module):
         # Decoder Level 1
         self.up2_1 = Upsample(int(dim * 2**1))
         self.noise_level1 = TransformerBlock(
-            dim=int(dim * 2**1) + 64, num_heads=heads[2],
+            dim=int(dim * 2**1) + 64,
+            num_heads=heads[2],
             ffn_expansion_factor=ffn_expansion_factor,
             bias=bias, LayerNorm_type=LayerNorm_type,
         )
-        self.reduce_noise_level1 = nn.Conv2d(int(dim * 2**1) + 64, int(dim * 2**1), kernel_size=1, bias=bias)
+        self.reduce_noise_level1 = nn.Conv2d(
+            int(dim * 2**1) + 64, int(dim * 2**1),
+            kernel_size=1, bias=bias
+        )
         self.decoder_level1 = nn.Sequential(*[
             TransformerBlock(dim=int(dim * 2**1), num_heads=heads[0],
                              ffn_expansion_factor=ffn_expansion_factor,
@@ -386,7 +423,10 @@ class PromptIR(nn.Module):
                              bias=bias, LayerNorm_type=LayerNorm_type)
             for _ in range(num_refinement_blocks)
         ])
-        self.output = nn.Conv2d(int(dim * 2**1), out_channels, kernel_size=3, stride=1, padding=1, bias=bias)
+        self.output = nn.Conv2d(
+            int(dim * 2**1), out_channels,
+            kernel_size=3, stride=1, padding=1, bias=bias
+        )
 
     def forward(self, inp_img, noise_emb=None):
         # Patch embedding

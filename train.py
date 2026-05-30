@@ -11,8 +11,10 @@ Usage:
     python train.py
     python train.py --patch_size 160 --epochs 180 --batch_size 4 --accum_steps 1
     python train.py --patch_size 192 --epochs 200 --batch_size 2 --accum_steps 2
-    python train.py --patch_size 208 --epochs 200 --batch_size 2 --accum_steps 2 --ckpt_dir checkpoints --resume checkpoints/last.pth
-    python train.py --patch_size 192 --epochs 200 --batch_size 2 --accum_steps 2 --ckpt_dir checkpoints --resume checkpoints/last.pth
+    python train.py --patch_size 208 --epochs 200 --batch_size 2 --accum_steps 2 \
+                   --ckpt_dir checkpoints --resume checkpoints/last.pth
+    python train.py --patch_size 192 --epochs 200 --batch_size 2 --accum_steps 2 \
+                   --ckpt_dir checkpoints --resume checkpoints/last.pth
 """
 
 import argparse
@@ -23,18 +25,18 @@ import random
 
 import matplotlib
 matplotlib.use('Agg')   # non-interactive backend — safe for servers / Colab
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.patches as mpatches  # noqa: E402
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+import torch.optim as optim  # noqa: E402
+from torch.utils.data import DataLoader  # noqa: E402
+from tqdm import tqdm  # noqa: E402
 
-from dataset import ValDataset, TrainDataset, build_pairs
-from model import PromptIR
+from dataset import ValDataset, TrainDataset, build_pairs  # noqa: E402
+from model import PromptIR  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -145,8 +147,14 @@ def validate(model, val_loader, criterion, device, amp_enabled=False):
             psnr_by_type[dtype].append(psnr)
 
     avg_loss = total_loss / len(val_loader)
-    psnr_rain = sum(psnr_by_type['rain']) / len(psnr_by_type['rain']) if psnr_by_type['rain'] else 0.0
-    psnr_snow = sum(psnr_by_type['snow']) / len(psnr_by_type['snow']) if psnr_by_type['snow'] else 0.0
+    psnr_rain = (
+        sum(psnr_by_type['rain']) / len(psnr_by_type['rain'])
+        if psnr_by_type['rain'] else 0.0
+    )
+    psnr_snow = (
+        sum(psnr_by_type['snow']) / len(psnr_by_type['snow'])
+        if psnr_by_type['snow'] else 0.0
+    )
     psnr_all = sum(psnr_by_type['rain'] + psnr_by_type['snow']) / (
         len(psnr_by_type['rain']) + len(psnr_by_type['snow'])
     )
@@ -179,7 +187,9 @@ def save_loss_curve(train_losses, val_losses, out_path: str):
     ax.annotate(
         f'Best val\nEpoch {best_epoch}\n{best_val:.4f}',
         xy=(best_epoch, best_val),
-        xytext=(best_epoch + max(1, len(epochs) * 0.03), best_val),
+        xytext=(
+            best_epoch + max(1, len(epochs) * 0.03), best_val
+        ),
         fontsize=8,
         color='gray',
         arrowprops=dict(arrowstyle='->', color='gray'),
@@ -220,7 +230,10 @@ def save_psnr_bar_chart(
     # ---- Left: PSNR over epochs ----
     ax_line.plot(epochs, psnr_rain_hist, label='Rain',    color='royalblue',  linewidth=2)
     ax_line.plot(epochs, psnr_snow_hist, label='Snow',    color='mediumorchid', linewidth=2)
-    ax_line.plot(epochs, psnr_all_hist,  label='Overall', color='darkorange',  linewidth=2, linestyle='--')
+    ax_line.plot(
+        epochs, psnr_all_hist, label='Overall',
+        color='darkorange', linewidth=2, linestyle='--'
+    )
     ax_line.set_xlabel('Epoch', fontsize=12)
     ax_line.set_ylabel('PSNR (dB)', fontsize=12)
     ax_line.set_title('Val PSNR per Degradation Type', fontsize=13)
@@ -232,7 +245,10 @@ def save_psnr_bar_chart(
     values = [psnr_rain_hist[-1], psnr_snow_hist[-1], psnr_all_hist[-1]]
     colors = ['royalblue', 'mediumorchid', 'darkorange']
 
-    bars = ax_bar.bar(categories, values, color=colors, width=0.5, edgecolor='white', linewidth=0.8)
+    bars = ax_bar.bar(
+        categories, values, color=colors,
+        width=0.5, edgecolor='white', linewidth=0.8
+    )
     for bar, val in zip(bars, values):
         ax_bar.text(
             bar.get_x() + bar.get_width() / 2,
@@ -244,19 +260,26 @@ def save_psnr_bar_chart(
     # Horizontal reference lines
     for ref_db in [25, 30, 35]:
         ax_bar.axhline(ref_db, color='gray', linestyle=':', linewidth=0.9, alpha=0.6)
-        ax_bar.text(len(categories) - 0.45, ref_db + 0.05, f'{ref_db} dB', fontsize=8, color='gray')
+        ax_bar.text(
+            len(categories) - 0.45, ref_db + 0.05,
+            f'{ref_db} dB', fontsize=8, color='gray'
+        )
 
     ax_bar.set_ylim(0, max(values) + 3)
     ax_bar.set_ylabel('PSNR (dB)', fontsize=12)
-    ax_bar.set_title(f'Final Epoch PSNR by Degradation Type\n'
-                     f'(epoch {epochs[-1]})', fontsize=13)
+    ax_bar.set_title(
+        f'Final Epoch PSNR by Degradation Type\n'
+        f'(epoch {epochs[-1]})', fontsize=13
+    )
     ax_bar.grid(axis='y', linestyle='--', alpha=0.4)
 
     # Legend patches that match the line plot colours
     patches = [mpatches.Patch(color=c, label=l) for c, l in zip(colors, categories)]
     ax_bar.legend(handles=patches, fontsize=10)
 
-    fig.suptitle('Per-Type PSNR Analysis  ·  PromptIR HW4', fontsize=14, y=1.01)
+    fig.suptitle(
+        'Per-Type PSNR Analysis  ·  PromptIR HW4', fontsize=14, y=1.01
+    )
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches='tight')
     plt.close(fig)
@@ -504,13 +527,19 @@ def parse_args():
 
     # Validation / checkpointing
     parser.add_argument('--val_ratio', type=float, default=0.1,
-                        help='Fraction of each degradation type held out for validation '
-                             '(stratified split). Default: 0.1 → 10%%.')
+                        help=(
+                            'Fraction of each degradation type held out '
+                            'for validation (stratified split). '
+                            'Default: 0.1 → 10%%.'
+                        ))
     parser.add_argument('--no_amp', dest='amp', action='store_false',
                         help='Disable AMP and train in full fp32 (default: AMP ON).')
     parser.set_defaults(amp=True)
     parser.add_argument('--accum_steps', type=int, default=1,
-                        help='Gradient accumulation steps. Effective batch = batch_size x accum_steps.')
+                        help=(
+                            'Gradient accumulation steps. '
+                            'Effective batch = batch_size x accum_steps.'
+                        ))
     return parser.parse_args()
 
 

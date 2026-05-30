@@ -10,7 +10,7 @@
 This repository contains my implementation for HW4 of *Selected Topics in Visual Recognition using Deep Learning*.  
 The task is all-in-one image restoration: a single model must remove both rain streaks and snow particles from degraded images. Performance is measured by PSNR (Peak Signal-to-Noise Ratio) against the ground-truth clean images.
 
-The method is based on **PromptIR** (Potlapalli et al., ECCV 2024), a transformer-based image restoration network that uses learnable prompt components to supply degradation-specific guidance at multiple decoder scales. All models are trained from scratch with no pretrained weights and no external data.
+The method is based on **PromptIR** (Potlapalli et al., NeurIPS 2023), a transformer-based image restoration network that uses learnable prompt components to supply degradation-specific guidance at multiple decoder scales. All models are trained from scratch with no pretrained weights and no external data.
 
 Key modifications over the vanilla PromptIR:
 

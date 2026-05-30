@@ -9,7 +9,8 @@ pred.npz format:
     Values: numpy arrays of shape (3, H, W), dtype uint8, values 0-255.
 
 Usage:
-    python infer.py --data_dir hw4_realse_dataset --ckpt checkpoints/best_psnr.pth --output results\pred.npz --tile_size 2048 --tile_overlap 128
+    python infer.py --data_dir hw4_realse_dataset --ckpt checkpoints/best_psnr.pth \
+                   --output results/pred.npz --tile_size 2048 --tile_overlap 128
 """
 
 import argparse
@@ -28,10 +29,15 @@ from model import PromptIR
 # Tile-based inference
 # ---------------------------------------------------------------------------
 
-def infer_with_tiling(model, img_tensor, tile_size: int = 512, tile_overlap: int = 64, device='cuda'):
+def infer_with_tiling(
+    model, img_tensor,
+    tile_size: int = 512, tile_overlap: int = 64,
+    device='cuda'
+):
     """
     Split a large image into overlapping tiles, infer each tile, and blend.
     Uses simple uniform averaging in the overlap regions.
+
     """
     _, _, H, W = img_tensor.shape
     stride = tile_size - tile_overlap
