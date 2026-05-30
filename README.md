@@ -113,5 +113,5 @@ Key arguments:
 
 Best public leaderboard result: **31.47 dB PSNR**
 
-![Leaderboard Screenshot](leaderboard.png)
+![Leaderboard Screenshot](https://raw.githubusercontent.com/TiffanyChen-tc/Selected_Topics_in_Visual_Recognition_using_Deep_Learning_HW4/main/competition.png)
 
